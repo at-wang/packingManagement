@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 页面meta -->
+
+    <meta charset="utf-8">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>@@@停车场管理系统</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" type="text/css" href="css/elementui.css">
+    <link rel="stylesheet" type="text/css" href="elementui/index.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">-->
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/layui.css">-->
+    <link rel="stylesheet" type="text/css" href="elementui/index2.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/vue.js"></script>
+    <script type="text/javascript" src="elementui/index.js"></script>
+    <script type="text/javascript" src="js/elementui.js"></script>
+    <script type="text/javascript" src="js/axios-0.18.0.js"></script>
+    <script type="text/javascript" src="js/cookie_utils.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/date.js"></script>
+    <script type="text/javascript" src="js/nowTime.js"></script>
+    <script type="text/javascript" src="js/echarts.js"></script>
+</head>
+<body>
+<div id="app">
+    <el-container style="background-color: #FFFFFF">
+        <el-header style="margin-top: 20px">
+            <el-autocomplete
+                    class="inline-input"
+                    v-model="pagination.username"
+                    :fetch-suggestions="querySearch"
+                    placeholder="请输入车主姓名"
+                    style="width: 300px"
+                    :trigger-on-focus="false"
+            ></el-autocomplete>
+            <el-button @click="getUserInformation" type="info" style="background-color: #0c726b;width: 100px">搜索
+            </el-button>
+            <el-button @click="dialogBuildFormVisible=true;buildForm={}" type="info" style="background-color: #0c726b;width: 100px">
+                新建
+            </el-button>
+            <el-button @click="exportUser" type="info" style="background-color: #0c726b;width: 100px">导出数据
+            </el-button>
+        </el-header>
+        <template>
+            <div style="margin-left: 20px;margin-right: 20px">
+                <el-table
+                        :data="tableData"
+                        border
+                        style="width: 100%">
+                    <el-table-column
+                            prop="userId"
+                            label="编号"
+                            width="150">
+                    </el-table-column>
+                    <el-table-column
+                            prop="username"
+                            label="车主名称"
+                            width="200">
+                    </el-table-column>
+                    <el-table-column
+                            prop="userPhone"
+                            label="车主电话"
+                            >
+                    </el-table-column>
+                    <el-table-column
+                            prop="userSex"
+                            label="车主性别"
+                            >
+                    </el-table-column>
+                    <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-button
+                                    size="small"
+                                    @click="handleEdit( scope.row)">编辑
+                            </el-button>
+                            <el-popconfirm
+                                    title="你确定删除吗？"
+                                    @confirm="handleDelete(scope.row)"
+                            >
+                                <el-button
+                                        size="small"
+                                        type="danger"
+                                        slot="reference">删除
+                                </el-button>
+                            </el-popconfirm>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+            <!--分页组件-->
+            <div class="pagination-container">
+                <el-pagination
+                        class="pagiantion"
+                        :current-page="pagination.currentPage"
+                        @current-change="handleCurrentChange"
+                        :page-size="pagination.pageSize"
+                        layout="total, prev, pager, next, jumper"
+                        :total="pagination.total">
+                </el-pagination>
+            </div>
+            <div style="height: 20px;line-height: 20px;margin-left:40%; font-size: 12px;">© 2021-?
+                @@@.com 版权所有
+            </div>
+            <div style="height: 20px;line-height: 20px;margin-left:25%; font-size: 12px;">
+                违法和不良信息举报电话：010-64755951， 违法和不良信息/涉未成年人有害信息投诉 2685710937.com
+            </div>
+        </template>
+        <!--新建弹层-->
+        <div>
+            <el-dialog :visible.sync="dialogBuildFormVisible">
+                <div slot="title" style="height: 10px">
+                    <h3 style="color: #0c726b">添加车主信息</h3>
+                </div>
+                <el-form :model="buildForm" :rules="buildRules">
+                    <el-form-item prop="username" label="车主名称">
+                        <el-input v-model="buildForm.username" style="width: 300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="userPhone" label="车主电话">
+                        <el-input v-model="buildForm.userPhone" style="width: 300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="userSex" label="车主性别">
+                        <el-input v-model="buildForm.userSex" style="width:300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                    <el-button type="info" style="background-color: #f0f0f0;color: #2F4056"
+                               @click="dialogBuildFormVisible = false">取 消
+                    </el-button>
+                    <el-button type="info" style="background-color: #0c726b" @click="addUserInformation">确
+                        定
+                    </el-button>
+                </div>
+            </el-dialog>
+        </div>
+        <!--编辑弹层-->
+        <div>
+            <el-dialog :visible.sync="dialogEditFormVisible">
+                <div slot="title" style="height: 10px">
+                    <h3 style="color: #0c726b">编辑车主信息</h3>
+                </div>
+                <el-form :model="editForm" :rules="editRules">
+                    <el-form-item prop="username" label="车主名称">
+                        <el-input v-model="editForm.username" style="width: 300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="userPhone" label="车主电话">
+                        <el-input v-model="editForm.userPhone" style="width: 300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="userSex" label="车主性别">
+                        <el-input v-model="editForm.userSex" style="width:300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                    <el-button type="info" style="background-color: #f0f0f0;color: #2F4056"
+                               @click="dialogEditFormVisible = false">取 消
+                    </el-button>
+                    <el-button type="info" style="background-color: #0c726b" @click="reviseUserInformation">确
+                        定
+                    </el-button>
+                </div>
+            </el-dialog>
+        </div>
+    </el-container>
+</div>
+<script>
+  var vm=new Vue({
+      el:'#app',
+      data:{
+          dialogEditFormVisible:false,
+          buildRules:{
+              username: [
+                  {
+                      required: true,
+                      message: "车主姓名不能为空",
+                      trigger: "blur",
+                  },
+                  {
+                      min: 2,
+                      max: 10,
+                      message: "长度在2到10个字符",
+                      trigger: 'blur'
+                  },
+              ],
+              userSex: [
+                  {
+                      required: true,
+                      message: "车主姓名不能为空",
+                      trigger: "blur",
+                  },
+                  {
+                      min: 1,
+                      max: 1,
+                      message: "长度在1个字符",
+                      trigger: 'blur'
+                  },
+              ],
+              userPhone: [
+                  {
+                      required: true,
+                      message: "停车场名称不能为空",
+                      trigger: "blur",
+                  },
+                  {
+                      min: 11,
+                      max: 11,
+                      message: "长度为11个字符",
+                      trigger: 'blur'
+                  },
+              ],},
+          editRules:{
+              username: [
+                  {
+                      required: true,
+                      message: "车主姓名不能为空",
+                      trigger: "blur",
+                  },
+                  {
+                      min: 2,
+                      max: 10,
+                      message: "长度在2到10个字符",
+                      trigger: 'blur'
+                  },
+              ],
+              userSex: [
+                  {
+                      required: true,
+                      message: "车主姓名不能为空",
+                      trigger: "blur",
+                  },
+                  {
+                      min: 1,
+                      max: 1,
+                      message: "长度在1个字符",
+                      trigger: 'blur'
+                  },
+              ],
+              userPhone: [
+                  {
+                      required: true,
+                      message: "停车场名称不能为空",
+                      trigger: "blur",
+                  },
+                  {
+                      min: 11,
+                      max: 11,
+                      message: "长度为11个字符",
+                      trigger: 'blur'
+                  },
+              ],},
+          dialogBuildFormVisible:false,
+          userUrl: 'http://localhost:8082/user/',
+          tableData:[],
+          pagination: {
+              currentPage: 1,
+              pageSize: 6,
+              total: 0,
+              username: '',
+          },
+          buildForm:{username:'',userPhone:'',userSex:''},
+          editForm:{username:'',userPhone:'',userSex:''},
+      },
+      created(){
+          this.getUserInformation();
+      },
+      methods:{
+          getUserInformation(){
+              axios.get(this.userUrl+"getUserInformation",{
+                  params:{
+                      "currentPage":this.pagination.currentPage,
+                      "pageSize":this.pagination.pageSize,
+                      "username":this.pagination.username
+                  }
+              }).then((res)=>{
+                  if (res.data.flag){
+                      this.tableData=res.data.data.records;
+                      this.pagination.pageSize = res.data.data.size;
+                      this.pagination.currentPage = res.data.data.current;
+                      this.pagination.total = res.data.data.total;
+                  }else {
+                      this.tableData=null;
+                  }
+              }).finally(()=>{
+                  this.pagination.username="";
+              })
+          },
+          //切换页码
+          handleCurrentChange(currentPage) {
+              axios.get(this.userUrl+"getUserInformation",{
+                  params:{
+                      "currentPage": currentPage,
+                      "pageSize":this.pagination.pageSize,
+                      "username":""
+                  }
+              }).then((res)=>{
+                  if (res.data.flag){
+                      this.tableData=res.data.data.records;
+                      this.pagination.total = res.data.data.total;
+                  }else {
+                      this.tableData=null;
+                  }
+              }).finally(()=>{
+                  this.pagination.username="";
+              })
+          },
+          //导出车主信息
+          exportUser(){
+              this.$confirm("您确定导出到本地吗?", "提示", {
+                  confirmButtonText: "确定",
+                  cancelButtonText: "取消",
+                  type: "warning"
+              }).then(() => {
+                  location.href = this.userUrl + "exportUser";
+              })
+          },
+          //编辑请求
+          handleEdit(row){
+              this.dialogEditFormVisible=true;
+              this.editForm=row;
+          },
+          reviseUserInformation(){
+              axios.put(this.userUrl+"reviseUserInformation",this.editForm).then((res)=>{
+                  if (res.data.flag){
+                      this.$message.success(res.data.message);
+                  }else {
+                      this.$message.error(res.data.message);
+                  }
+              }).finally(()=>{
+                  this.dialogEditFormVisible=false;
+              })
+          },
+          addUserInformation(){
+              if (this.buildForm.username.length>0&&
+                  this.buildForm.userPhone.length>0&&
+                  this.buildForm.userSex.length>0){
+                  let data={
+                      username: this.buildForm.username,
+                      userPhone: this.buildForm.userPhone,
+                      userSex: this.buildForm.userSex,
+                  };
+                  axios.post(this.userUrl+"addUserInformation",data).then((res)=>{
+                      if (res.data.flag){
+                         this.$message.success(res.data.message);
+                      }else {
+                          this.$message.error(res.data.message);
+                      }
+                  })
+              }else {
+                  this.$message.error("请填写合格的信息")
+              }
+              this.dialogBuildFormVisible = false;
+              this.getParkingInformation();
+          },
+          //删除车主信息
+          handleDelete(row){
+              axios.delete(this.userUrl+"cancelUserInformation?userId="+row.userId).then((res)=>{
+                  if (res.data.flag){
+                      this.$message.success(res.data.message);
+                  }else {
+                      this.$message.error(res.data.message);
+                  }
+              }).finally(()=>{
+                  this.getUserInformation();
+              })
+          },
+          //自动补全
+          querySearch(queryString, cb) {
+              axios.get(this.userUrl + "getUserCompletion", {
+                  params: {
+                      "prefix": queryString
+                  }
+              }).then((res) => {
+                  let data = [];
+                  var value = "{ value:";
+                  for (var i = 0; i < res.data.data.length; i++) {
+                      data.push({'value': res.data.data[i]});
+                  }
+                  console.log(data);
+                  var results = data;
+                  // // 调用 callback 返回建议列表的数据
+                  cb(results);
+              })
+          },
+      },
+  })
+</script>
+
+</body>
+</html>

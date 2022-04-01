@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.itwang.packingmanagement.dao.ParkingRecordDao">
+    <select id="selectParkingRecord" resultType="cn.itwang.packingmanagement.domain.ParkingRecordVO">
+        SELECT parking_record_id,parking_name, stop_time, drive_away_time, parking_charge, licence_plate, card_number,card_balance
+        FROM `pm_parking_record` r,
+        `pm_parking` p,
+        `pm_car` c,
+        `pm_parking_card` card
+        WHERE r.car_id = c.car_id
+        AND r.parking_id = p.parking_id
+        AND r.parking_card_id = card.parking_card_id
+        <if test="licencePlate !=null and licencePlate.length>0">
+            and c.licence_plate like CONCAT('%',#{licencePlate},'%')
+        </if>
+        <if test="end !=null and end>0">
+            LIMIT #{start},#{end};
+        </if>
+    </select>
+
+    <select id="selectParkingRecordCount" resultType="long">
+        SELECT count(*)
+        FROM `pm_parking_record` r,
+        `pm_parking` p,
+        `pm_car` c,
+        `pm_parking_card` card
+        WHERE r.car_id = c.car_id
+        AND r.parking_id = p.parking_id
+        AND r.parking_card_id = card.parking_card_id
+        <if test="licencePlate !=null and licencePlate.length>0">
+            and c.licence_plate like CONCAT('%',#{licencePlate},'%')
+        </if>
+    </select>
+
+</mapper>

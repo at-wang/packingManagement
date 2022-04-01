@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 页面meta -->
+
+    <meta charset="utf-8">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>@@@停车场管理系统</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" type="text/css" href="css/elementui.css">
+    <link rel="stylesheet" type="text/css" href="elementui/index.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">-->
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/layui.css">-->
+    <link rel="stylesheet" type="text/css" href="elementui/index2.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">-->
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/vue.js"></script>
+    <script type="text/javascript" src="elementui/index.js"></script>
+    <script type="text/javascript" src="js/elementui.js"></script>
+    <script type="text/javascript" src="js/axios-0.18.0.js"></script>
+    <script type="text/javascript" src="js/cookie_utils.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/date.js"></script>
+    <script type="text/javascript" src="js/nowTime.js"></script>
+    <script type="text/javascript" src="js/echarts.js"></script>
+    <!--    <script type="text/javascript" src="js/layui.js"></script>-->
+    <style>
+
+        .el-tag + .el-tag {
+            margin-left: 10px;
+        }
+
+        /*复选框样式*/
+
+        .el-radio__input.is-checked .el-radio__inner, .el-radio__input.is-indeterminate .el-radio__inner {
+            background-color: #0c726b;
+            border-color: #0c726b;
+            color: #0c726b;
+        }
+
+        .el-radio__input.is-checked + .el-radio__label {
+            color: #0c726b;
+        }
+
+        .el-radio.is-bordered.is-checked {
+            border-color: #0c726b;
+        }
+
+        .el-radio__input.is-focus .el-radio__inner {
+            border-color: #0c726b;
+        }
+
+        .el-message {
+            margin-top: 200px !important;
+        }
+
+        /*这是鼠标没有指在连接上时的颜色，color后面是黑色*/
+        a {
+            text-decoration: none;
+            color: #f0f0f0;
+        }
+
+        /*当鼠标移到超链接显示样式*/
+        a:hover {
+            color: #8c222c;
+            text-decoration: none;
+        }
+
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-container>
+        <el-aside style="background-color: #314157;height: 1000px;width: 182px">
+            <el-header style="background-color: #1d232a;height: 40px">
+                <font style="line-height: 40px" color="#0c726b">@@@停车场管理</font>
+            </el-header>
+
+            <el-menu
+                    @select="select"
+                    :default-active="defaultIndex"
+                    background-color="#314157"
+                    active-text-color="#0c726b"
+                    text-color="#ffffff"
+                    style="width: 180px"
+            >
+                <el-menu-item @click.native="loadIframe" index="1"><i class="el-icon-menu"></i>首页</el-menu-item>
+                <el-submenu v-for="item in menus" :index="item.id">
+                    <template slot="title">
+                        <i class="el-icon-setting"></i>
+                        <span>{{item.text}}</span>
+                    </template>
+                    <template>
+                        <el-menu-item-group>
+                            <el-menu-item @click.native="loadIframe" :index="item.id+'-1'">{{item.textSon1}}
+                            </el-menu-item>
+                            <el-menu-item @click.native="loadIframe" :index="item.id+'-2'">{{item.textSon2}}
+                            </el-menu-item>
+                            <template v-if="item.textSon3!=null">
+                                <el-menu-item @click.native="loadIframe" :index="item.id+'-3'">{{item.textSon3}}
+                                </el-menu-item>
+                            </template>
+                        </el-menu-item-group>
+                    </template>
+                </el-submenu>
+            </el-menu>
+            <!--            </el-container>-->
+        </el-aside>
+        <el-container>
+            <el-header style="background-color: #eff2f7;height: 40px;border: 1.5px solid #eff2f7">
+                <el-aside style="position: absolute;margin-top: 10px;height: 40px">
+                    <el-breadcrumb separator="/">
+                        <el-breadcrumb-item><a style="cursor: pointer"
+                                               @click="localHomePage">{{breadcrumbList.text}}</a></el-breadcrumb-item>
+                        <template v-if="breadcrumbList.textSon1!=''">
+                            <el-breadcrumb-item><font color="#0c726b">{{breadcrumbList.textSon1}}</font>
+                            </el-breadcrumb-item>
+                            <el-breadcrumb-item>{{breadcrumbList.textSon2}}</el-breadcrumb-item>
+                        </template>
+                    </el-breadcrumb>
+                </el-aside>
+                <el-container style="margin-left: 850px">
+                    <div><font style="line-height: 40px">{{adminName}}</font></div>
+                    <div style="margin-left: 40px">
+                        <el-dropdown>
+                            <el-avatar
+                                    :src="adminImage"></el-avatar>
+                            <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item @click.native="type='管理员信息'" style="width: 60px;"><font
+                                        style="margin-left: 7px" size="2"
+                                        color="#0c726b">我的信息</font>
+                                </el-dropdown-item>
+                                <el-dropdown-item @click.native="exitLogin" style="width: 60px;"><font
+                                        style="margin-left: 17px" size="2"
+                                        color="#0c726b">退出</font>
+                                </el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
+                    </div>
+                </el-container>
+
+
+            </el-header>
+            <el-container style="background-color: #f6f6f6" v-if="type=='首页'">
+                <div style="border: 1px solid #bebebe;width: 700px;margin-top: 40px;margin-left:180px;background-color: #FFFFFF">
+                    <div>
+                        <font color="#0c726b" style="margin-left: 210px" size="5">@@@停车场管理系统须知</font>
+                    </div>
+                    <div style="margin-top: 20px">
+                        <font style="margin-left: 30px" color="#0c726b" size="4">车辆管理模块：</font>
+                    </div>
+                    <div style="margin-top: 10px">
+                        <font size="4" style="margin-left:60px">
+                            车牌识别:
+                        </font>
+                    </div>
+                    <div >
+                        <font size="3" style="margin-left:150px">通过上传带有车牌的照片识别出车牌并查询该车停在那个停车场。</font>
+                    </div>
+                    <div style="margin-top: 10px">
+                        <font size="4" style="margin-left:60px">
+                            车辆信息:
+                        </font>
+                    </div>
+                    <div >
+                        <font size="3" style="margin-left:150px"> 新增在某某停车场的车辆信息并自动办理停车卡,可以修改删除该车辆信息，</font>
+                        <font size="3" style="margin-left:150px">可以根据停车牌查询该车辆信息,可以把所有车辆信息导出excel到本地</font>
+
+                    </div>
+                </div>
+            </el-container>
+            <el-container v-if="type=='车牌识别'">
+                <iframe scrolling="no" src="licencePlate.html" width="100%"></iframe>
+            </el-container>
+            <el-container v-if="type=='停车信息'">
+                <iframe scrolling="no" src="car.html" width="100%"></iframe>
+            </el-container>
+            <el-container v-if="type=='停车场信息'">
+                <iframe scrolling="no" src="Parking.html" width="100%"></iframe>
+            </el-container>
+            <el-container v-if="type=='停车记录信息'">
+                <iframe scrolling="no" src="parkingRecord.html" width="100%"></iframe>
+            </el-container>
+            <el-container v-if="type=='停车卡信息'">
+                <iframe scrolling="no" src="ParkingCard.html" width="100%"></iframe>
+            </el-container>
+            <el-container v-if="type=='车主信息'">
+                <iframe scrolling="no" src="user.html" width="100%"></iframe>
+            </el-container>
+            <el-container v-if="type=='停车场视图'">
+                <iframe scrolling="no" src="parkingEcharts.html" width="100%"></iframe>
+            </el-container>
+            <el-container v-if="type=='停车卡视图'">
+                <iframe scrolling="no" src="parkingCardEcharts.html" width="100%"></iframe>
+            </el-container>
+            <el-container v-if="type=='车辆视图'">
+                <iframe scrolling="no" src="carEcharts.html" width="100%"></iframe>
+            </el-container>
+            <el-container v-if="type=='车主视图'">
+                <iframe scrolling="no" src="userEcharts.html" width="100%"></iframe>
+            </el-container>
+            <el-container v-if="type=='管理员信息'">
+                <iframe scrolling="no" src="admin.html" width="100%"></iframe>
+            </el-container>
+        </el-container>
+    </el-container>
+
+</div>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            defaultIndex: '1',
+            breadcrumbList: {text: '首页', textSon1: '', textSon2: '', type: ''},
+            adminName: '试试',
+            adminImage: '',
+            type: '首页',
+            menus: [
+                {id: '2', text: '停车管理', textSon1: '车牌识别', textSon2: '停车信息',textSon3:'车辆视图'},
+                {id: '3', text: '停车场管理', textSon1: '停车场视图', textSon2: '停车场信息'},
+                {id: '4', text: '停车记录管理', textSon1: '添加停车记录', textSon2: '停车记录信息'},
+                {id: '5', text: '停车卡管理', textSon1: '停车卡视图', textSon2: '停车卡信息'},
+                {id: '6', text: '车主管理', textSon1: '车主视图', textSon2: '车主信息'},
+                {id: '7', text: '管理员管理', textSon1: '添加管理员', textSon2: '管理员信息'},],
+            tags: [],
+            text: '',
+            token: '',
+        },
+        created() {
+            this.getAdmin();
+        },
+        methods: {
+            //获取管理员信息
+            getAdmin() {
+                this.token = getCookieValue("token");
+                if (this.token == null) {
+                    //alert("请先登录");
+                    window.location.href = 'error.html';
+                } else {
+                    this.adminName = getCookieValue("name");
+                    this.adminImage = getCookieValue("image");
+                }
+
+            },
+            //弹出标签并加载iframe
+            loadIframe(key) {
+                if (key.path[0].innerText == '首页') {
+                    this.breadcrumbList.textSon1 = "";
+                    this.type = key.path[0].innerText;
+                } else {
+                    this.breadcrumbList.textSon1 = key.path[4].children[0].innerText;
+                    this.breadcrumbList.textSon2 = key.path[0].innerText;
+                    this.type = key.path[0].innerText;
+                }
+                //console.log(key.path[5].children[4].innerText);
+                //console.log(key.path[0].innerText);
+                //this.breadcrumbList.text='';
+            },
+            //加载首页
+            localHomePage() {
+                this.breadcrumbList.textSon1 = "";
+                this.type = '首页';
+            },
+            //退出
+            exitLogin() {
+                deleteCookie("image");
+                deleteCookie("name");
+                deleteCookie("id");
+                deleteCookie("token");
+                window.location.href = 'exit.html';
+            },
+
+
+        },
+    })
+</script>
+</body>
+</html>

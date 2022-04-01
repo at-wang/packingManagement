@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 页面meta -->
+
+    <meta charset="utf-8">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>@@@停车场管理系统</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" type="text/css" href="css/elementui.css">
+    <link rel="stylesheet" type="text/css" href="elementui/index.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">-->
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="elementui/index2.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <!--<link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">-->
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/vue.js"></script>
+    <script type="text/javascript" src="elementui/index.js"></script>
+    <script type="text/javascript" src="js/elementui.js"></script>
+    <script type="text/javascript" src="js/axios-0.18.0.js"></script>
+    <script type="text/javascript" src="js/cookie_utils.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/date.js"></script>
+    <script type="text/javascript" src="js/nowTime.js"></script>
+    <script type="text/javascript" src="js/echarts.js"></script>
+    <style>
+        .el-tag + .el-tag {
+            margin-left: 10px;
+        }
+
+        .button-new-tag {
+            margin-left: 10px;
+            height: 32px;
+            line-height: 30px;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .input-new-tag {
+            width: 90px;
+            margin-left: 10px;
+            vertical-align: bottom;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="main" style="width: 600px;height:400px;margin-left: 100px">
+
+    </div>
+
+</div>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            carUrl: 'http://localhost:8082/car/',
+            daZhong:0,
+            binLi:0,
+            baoMa:0,
+            jiPu:0,
+            qiTa:0,
+        },
+        mounted() {
+            var chartDom = document.getElementById('main');
+            var myChart = echarts.init(chartDom);
+            var option;
+            axios.get(this.carUrl+"getCarTypeCount?type="+"大众").then((res)=>{
+                if (res.data.flag){
+                    this.daZhong=res.data.data;
+
+                    //-------------------------------
+                    axios.get(this.carUrl+"getCarTypeCount?type="+"宾利").then((res)=>{
+                        if (res.data.flag){
+                            this.binLi=res.data.data;
+
+
+                            //-------------------------------
+                            axios.get(this.carUrl+"getCarTypeCount?type="+"吉普").then((res)=>{
+                                if (res.data.flag){
+                                    this.jiPu=res.data.data;
+
+
+                                    //---------------------------------
+                                    axios.get(this.carUrl+"getCarTypeCount?type="+"宝马").then((res)=>{
+                                        if (res.data.flag){
+                                            this.baoMa=res.data.data;
+
+
+                                            //-------------------------------------
+                                            axios.get(this.carUrl+"getCarTypeCount?type="+"").then((res)=>{
+                                                if (res.data.flag){
+                                                    this.qiTa=res.data.data;
+
+                                                    option = {
+                                                        title: {
+                                                            text: '停车类型统计',
+                                                            subtext: '来自所有停车场',
+                                                            left: 'center'
+                                                        },
+                                                        tooltip: {
+                                                            trigger: 'item'
+                                                        },
+                                                        legend: {
+                                                            orient: 'vertical',
+                                                            left: 'left'
+                                                        },
+                                                        series: [
+                                                            {
+                                                                name: 'Access From',
+                                                                type: 'pie',
+                                                                radius: '50%',
+                                                                data: [
+                                                                    { value: this.daZhong, name: '大众' },
+                                                                    { value: this.binLi, name: '宾利' },
+                                                                    { value: this.jiPu, name: '吉普' },
+                                                                    { value: this.baoMa, name: '宝马' },
+                                                                    { value: this.qiTa-this.daZhong-this.binLi
+                                                                        -this.jiPu-this.baoMa, name: '其他' }
+                                                                ],
+                                                                emphasis: {
+                                                                    itemStyle: {
+                                                                        shadowBlur: 10,
+                                                                        shadowOffsetX: 0,
+                                                                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    };
+                                                    myChart.setOption(option);
+                                                    //---------------------------------------
+
+                                                }
+                                            })
+
+                                        }
+                                    })
+                                }
+                            })
+                        }
+
+
+
+
+
+
+                    })
+                }
+            })
+
+
+
+
+
+        },
+        methods: {},
+    })
+</script>
+</body>
+</html>

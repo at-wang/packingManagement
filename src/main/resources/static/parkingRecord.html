@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 页面meta -->
+
+    <meta charset="utf-8">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>@@@停车场管理系统</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" type="text/css" href="css/elementui.css">
+    <link rel="stylesheet" type="text/css" href="elementui/index.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">-->
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/layui.css">-->
+    <link rel="stylesheet" type="text/css" href="elementui/index2.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">-->
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/vue.js"></script>
+    <script type="text/javascript" src="elementui/index.js"></script>
+    <script type="text/javascript" src="js/elementui.js"></script>
+    <script type="text/javascript" src="js/axios-0.18.0.js"></script>
+    <script type="text/javascript" src="js/cookie_utils.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/date.js"></script>
+    <script type="text/javascript" src="js/nowTime.js"></script>
+    <script type="text/javascript" src="js/echarts.js"></script>
+    <!--    <script type="text/javascript" src="js/layui.js"></script>-->
+    <style>
+
+        .el-tag + .el-tag {
+            margin-left: 10px;
+        }
+
+        /*复选框样式*/
+
+        .el-radio__input.is-checked .el-radio__inner, .el-radio__input.is-indeterminate .el-radio__inner {
+            background-color: #0c726b;
+            border-color: #0c726b;
+            color: #0c726b;
+        }
+
+        .el-radio__input.is-checked + .el-radio__label {
+            color: #0c726b;
+        }
+
+        .el-radio.is-bordered.is-checked {
+            border-color: #0c726b;
+        }
+
+        .el-radio__input.is-focus .el-radio__inner {
+            border-color: #0c726b;
+        }
+
+        .el-message {
+            margin-top: 200px !important;
+        }
+
+        /*这是鼠标没有指在连接上时的颜色，color后面是黑色*/
+        a {
+            text-decoration: none;
+            color: #f0f0f0;
+        }
+
+        /*当鼠标移到超链接显示样式*/
+        a:hover {
+            color: #8c222c;
+            text-decoration: none;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-container style="background-color: #FFFFFF">
+        <el-header style="margin-top: 20px">
+            <el-autocomplete
+                    class="inline-input"
+                    v-model="pagination.licencePlate"
+                    :fetch-suggestions="querySearch"
+                    placeholder="请输入车牌号"
+                    style="width: 200px"
+                    :trigger-on-focus="false"
+                    @select="handleSelect"
+            ></el-autocomplete>
+            <el-button @click="getParkingRecord" type="info" style="background-color: #0c726b;width: 100px">搜索
+            </el-button>
+            <el-button @click="exportParkingRecord" type="info" style="background-color: #0c726b;width: 100px">导出数据
+            </el-button>
+        </el-header>
+        <template>
+            <div style="margin-left: 20px;margin-right: 20px">
+                <el-table
+                        :data="tableData"
+                        border
+                        style="width: 100%">
+                    <el-table-column
+                            prop="parkingRecordId"
+                            label="编号"
+                            width="50">
+                    </el-table-column>
+                    <el-table-column
+                            prop="parkingName"
+                            label="停车场名称"
+                            width="210">
+                    </el-table-column>
+                    <el-table-column
+                            prop="licencePlate"
+                            label="车牌号"
+                            width="90">
+                    </el-table-column>
+                    <el-table-column
+                            prop="cardNumber"
+                            label="卡号"
+                            width="180">
+                    </el-table-column>
+                    <el-table-column
+                            prop="stopTimeVO"
+                            label="停车时间"
+                            width="180">
+                    </el-table-column>
+                    <el-table-column
+                            prop="driveAwayTimeVO"
+                            label="离开时间"
+                            width="180">
+                    </el-table-column>
+                    <el-table-column
+                            prop="costMoney"
+                            label="花费"
+                            width="60">
+                    </el-table-column>
+                    <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-popconfirm
+                                    title="你确定删除吗？"
+                                    @confirm="handleDelete(scope.row)"
+                            >
+                                <el-button
+                                        size="small"
+                                        type="danger"
+                                        slot="reference">删除
+                                </el-button>
+                            </el-popconfirm>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+            <!--分页组件-->
+            <div class="pagination-container">
+                <el-pagination
+                        class="pagiantion"
+                        :current-page="pagination.currentPage"
+                        @current-change="handleCurrentChange"
+                        :page-size="pagination.pageSize"
+                        layout="total, prev, pager, next, jumper"
+                        :total="pagination.total">
+                </el-pagination>
+            </div>
+            <div style="height: 20px;line-height: 20px;margin-left:40%; font-size: 12px;">© 2021-?
+                @@@.com 版权所有
+            </div>
+            <div style="height: 20px;line-height: 20px;margin-left:25%; font-size: 12px;">
+                违法和不良信息举报电话：010-64755951， 违法和不良信息/涉未成年人有害信息投诉 2685710937.com
+            </div>
+        </template>
+        <!--新建-->
+    </el-container>
+</div>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            tableData:[],
+            pagination: {
+                currentPage: 1,
+                pageSize: 6,
+                total: 0,
+                licencePlate: '',
+            },
+            parkingRecordUrl: 'http://localhost:8082/parkingRecord/',
+        },
+        created() {
+            this.getParkingRecord();
+        },
+        methods: {
+            getParkingRecord(){
+              axios.get(this.parkingRecordUrl+"getParkingRecord",{
+                  params:{
+                      "licencePlate":this.pagination.licencePlate,
+                      "currentPage":this.pagination.currentPage,
+                      "pageSize":this.pagination.pageSize
+                  }
+              }).then((res)=>{
+                  if (res.data.data){
+                      this.tableData=res.data.data;
+                      this.pagination.total=res.data.data[0].total;
+                  }else {
+                      this.tableData=null;
+                  }
+              }).finally(()=>{
+                  this.pagination.licencePlate="";
+              })
+            },
+            handleCurrentChange(currentPage){
+                axios.get(this.parkingRecordUrl+"getParkingRecord",{
+                    params:{
+                        "licencePlate":"",
+                        "currentPage":currentPage,
+                        "pageSize":this.pagination.pageSize
+                    }
+                }).then((res)=>{
+                    if (res.data.data){
+                        this.tableData=res.data.data;
+                        this.pagination.total=res.data.data[0].total;
+                    }else {
+                        this.tableData=null;
+                    }
+                }).finally(()=>{
+                    this.pagination.licencePlate="";
+                })
+            },
+            //删除停车记录
+            handleDelete(row){
+                axios.delete(this.parkingRecordUrl+"cancelParkingRecord?parkingRecordId="+row.parkingRecordId).then((res)=>{
+                    if (res.data.flag){
+                        this.$message.success(res.data.message);
+                    }else {
+                        this.$message.error(res.data.message);
+                    }
+                }).finally(()=>{
+                    this.getParkingRecord();
+                })
+            },
+            //导出停车记录
+            exportParkingRecord(){
+                this.$confirm("您确定导出到本地吗?", "提示", {
+                    confirmButtonText: "确定",
+                    cancelButtonText: "取消",
+                    type: "warning"
+                }).then(() => {
+                    location.href = this.parkingRecordUrl + "exportParkingRecord";
+                })
+            },
+            //自动补全
+            querySearch(queryString, cb) {
+                axios.get(this.parkingRecordUrl+"getParkingRecordCompletion",{
+                    params:{
+                        "prefix":queryString
+                    }
+                }).then((res)=>{
+                    let data=[];
+                    for (var i=0;i<res.data.data.length;i++){
+                        data.push({'value': res.data.data[i]});
+                    }
+                    console.log( data);
+                    var results = data;
+                    // // 调用 callback 返回建议列表的数据
+                    cb(results);
+                })
+            },
+        },
+    })
+</script>
+</body>
+</html>

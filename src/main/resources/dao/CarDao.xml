@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.itwang.packingmanagement.dao.CarDao">
+
+    <select id="selectCarInformation" parameterType="cn.itwang.packingmanagement.domain.Car"
+            resultType="cn.itwang.packingmanagement.domain.CarVO">
+        SELECT *
+        FROM pm_car c,
+        pm_user u,
+        pm_parking p
+        WHERE c.user_id = u.user_id
+        AND c.parking_id = p.parking_id
+        <if test="licencePlate !=null and licencePlate.length>0">
+            and c.licence_plate like CONCAT('%',#{licencePlate},'%')
+        </if>
+        <if test="end !=null and end>0">
+            LIMIT #{start},#{end};
+        </if>
+    </select>
+
+    <select id="selectCarCount" parameterType="cn.itwang.packingmanagement.domain.Car" resultType="long">
+        SELECT count(*)
+        FROM pm_car c,
+        pm_user u,
+        pm_parking p
+        WHERE c.user_id = u.user_id
+        AND c.parking_id = p.parking_id
+        <if test="licencePlate !=null and licencePlate.length>0">
+            and c.licence_plate like CONCAT('%',#{licencePlate},'%')
+        </if>
+    </select>
+
+    <select id="selectPoi" resultType="cn.itwang.packingmanagement.domain.CarVO">
+        SELECT car_id,
+               car_state,
+               licence_plate,
+               TYPE,
+               car_height,
+               car_width,
+               user_name,
+               user_phone,
+               user_sex,
+               parking_name
+        FROM pm_car c,
+             pm_user u,
+             pm_parking p
+        WHERE c.user_id = u.user_id
+          AND c.parking_id = p.parking_id
+    </select>
+
+</mapper>

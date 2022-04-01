@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.itwang.packingmanagement.dao.UserDao">
+
+
+    <insert id="add" useGeneratedKeys="true" keyProperty="userId">
+        insert into
+        pm_user (user_name,user_phone,user_sex)
+        values(#{username},#{userPhone},#{userSex})
+    </insert>
+
+</mapper>

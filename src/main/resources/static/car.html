@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 页面meta -->
+
+    <meta charset="utf-8">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>@@@停车场管理系统</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" type="text/css" href="css/elementui.css">
+    <link rel="stylesheet" type="text/css" href="elementui/index.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">-->
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/layui.css">-->
+    <link rel="stylesheet" type="text/css" href="elementui/index2.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/vue.js"></script>
+    <script type="text/javascript" src="elementui/index.js"></script>
+    <script type="text/javascript" src="js/elementui.js"></script>
+    <script type="text/javascript" src="js/axios-0.18.0.js"></script>
+    <script type="text/javascript" src="js/cookie_utils.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/date.js"></script>
+    <script type="text/javascript" src="js/nowTime.js"></script>
+    <script type="text/javascript" src="js/echarts.js"></script>
+</head>
+<style>
+
+    /*复选框样式*/
+
+    .el-radio__input.is-checked .el-radio__inner, .el-radio__input.is-indeterminate .el-radio__inner {
+        background-color: #0c726b;
+        border-color: #0c726b;
+        color: #0c726b;
+    }
+
+    .el-radio__input.is-checked + .el-radio__label {
+        color: #0c726b;
+    }
+
+    .el-radio.is-bordered.is-checked {
+        border-color: #0c726b;
+    }
+
+    .el-radio__input.is-focus .el-radio__inner {
+        border-color: #0c726b;
+    }
+</style>
+<body>
+<div id="app">
+    <el-container style="background-color: #FFFFFF">
+        <el-header style="margin-top: 20px">
+            <el-autocomplete
+                    class="inline-input"
+                    v-model="pagination.licencePlate"
+                    :fetch-suggestions="querySearch"
+                    placeholder="请输入车牌号"
+                    style="width: 300px"
+                    :trigger-on-focus="false"
+            ></el-autocomplete>
+            <el-button @click="getCarInformation" type="info" style="background-color: #0c726b;width: 100px">搜索
+            </el-button>
+            <el-button @click="dialogBuildFormVisible=true;buildForm={}" type="info"
+                       style="background-color: #0c726b;width: 100px">
+                新建
+            </el-button>
+            <el-button @click="exportCar" type="info" style="background-color: #0c726b;width: 100px">导出数据</el-button>
+        </el-header>
+        <template>
+            <div style="margin-left: 20px;margin-right: 20px">
+                <el-table
+                        :data="tableData"
+                        border
+                        style="width: 100%">
+                    <el-table-column
+                            prop="carId"
+                            label="编号"
+                            width="50">
+                    </el-table-column>
+                    <el-table-column
+                            prop="parkingName"
+                            label="停车场名称"
+                            width="210">
+                    </el-table-column>
+                    <el-table-column
+                            prop="licencePlate"
+                            label="车牌号"
+                            width="100px">
+                    </el-table-column>
+                    <el-table-column
+                            prop="type"
+                            label="车的类型"
+                            width="80px">
+                    </el-table-column>
+                    <el-table-column
+                            prop="userName"
+                            label="车主"
+                            width="80px">
+                    </el-table-column>
+                    <el-table-column
+                            prop="userPhone"
+                            label="车主电话"
+                            width="120px">
+                    </el-table-column>
+                    <el-table-column
+                            prop="userSex"
+                            label="车主性别"
+                            width="60px">
+                    </el-table-column>
+                    <el-table-column
+                            prop="carState"
+                            label="状态"
+                            width="80px">
+                    </el-table-column>
+                    <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-button
+                                    size="small"
+                                    @click="handleEdit( scope.row)">编辑
+                            </el-button>
+                            <el-button
+                                    type="warning"
+                                    size="small"
+                                    @click="handleModify( scope.row)">修改状态
+                            </el-button>
+                            <el-popconfirm
+                                    style="margin-left: 10px"
+                                    title="你确定删除吗？"
+                                    @confirm="handleDelete(scope.row)"
+                            >
+                                <el-button
+                                        size="small"
+                                        type="danger"
+                                        slot="reference">删除
+                                </el-button>
+                            </el-popconfirm>
+                        </template>
+                    </el-table-column>
+
+                </el-table>
+            </div>
+            <!--分页组件-->
+            <div class="pagination-container">
+                <el-pagination
+                        class="pagiantion"
+                        :current-page="pagination.currentPage"
+                        @current-change="handleCurrentChange"
+                        :page-size="pagination.pageSize"
+                        layout="total, prev, pager, next, jumper"
+                        :total="pagination.total">
+                </el-pagination>
+            </div>
+            <div style="height: 20px;line-height: 20px;margin-left:40%; font-size: 12px;">© 2021-?
+                @@@.com 版权所有
+            </div>
+            <div style="height: 20px;line-height: 20px;margin-left:25%; font-size: 12px;">
+                违法和不良信息举报电话：010-64755951， 违法和不良信息/涉未成年人有害信息投诉 2685710937.com
+            </div>
+        </template>
+        <!--新建弹层-->
+        <div>
+            <el-dialog :visible.sync="dialogBuildFormVisible">
+                <div slot="title" style="height: 10px">
+                    <h3 style="color: #0c726b">添加车辆信息</h3>
+                </div>
+                <el-form :model="buildForm" :rules="carBuildRules">
+                    <el-form-item prop="parkingId" label="停车场编号">
+                        <el-input v-model="buildForm.parkingId" style="width: 300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="username" label="车主名称">
+                        <el-input v-model="buildForm.username" style="width: 300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="userPhone" label="车主电话">
+                        <el-input v-model="buildForm.userPhone" style="width: 300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="userSex" label="车主性别">
+                        <el-input v-model="buildForm.userSex" style="width:300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="licencePlate" label="车牌号">
+                        <el-input v-model="buildForm.licencePlate" style="width:300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="type" label="车的类型">
+                        <el-input v-model="buildForm.type" style="width: 300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="carState" label="状态">
+                        <el-radio-group v-model="buildForm.carState">
+                        <el-radio style="margin-left: 40px" label="未离开">未离开</el-radio>
+                        <el-radio  label="离开">离开</el-radio>
+                        </el-radio-group>
+                    </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                    <el-button type="info" style="background-color: #f0f0f0;color: #2F4056"
+                               @click="dialogBuildFormVisible = false">取 消
+                    </el-button>
+                    <el-button type="info" style="background-color: #0c726b" @click="saveCarInformation">确
+                        定
+                    </el-button>
+                </div>
+            </el-dialog>
+        </div>
+        <!--编辑弹层-->
+        <div>
+            <el-dialog :visible.sync="dialogEditFormVisible">
+                <div slot="title" style="height: 10px">
+                    <h3 style="color: #0c726b">修改车辆信息</h3>
+                </div>
+                <el-form :model="editForm" :rules="carEditRules">
+                    <!--                    <el-form-item prop="parkingId" label="停车场编号">-->
+                    <!--                        <el-input v-model="editForm.parkingId" style="width: 300px;margin-left: 20px"></el-input>-->
+                    <!--                    </el-form-item>-->
+                    <el-form-item prop="userId" label="车主编号">
+                        <el-input v-model="editForm.userId" style="width: 300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="licencePlate" label="车牌号">
+                        <el-input v-model="editForm.licencePlate" style="width:300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="type" label="车的类型">
+                        <el-input v-model="editForm.type" style="width: 300px;margin-left: 20px"></el-input>
+                    </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                    <el-button type="info" style="background-color: #f0f0f0;color: #2F4056"
+                               @click="dialogEditFormVisible = false">取 消
+                    </el-button>
+                    <el-button type="info" style="background-color: #0c726b" @click="reviseCarInformation">确
+                        定
+                    </el-button>
+                </div>
+            </el-dialog>
+        </div>
+    </el-container>
+</div>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            carUrl: 'http://localhost:8082/car/',
+            parkingUrl: 'http://localhost:8082/parking/',
+            userUrl: 'http://localhost:8082/user/',
+            parkingCardUrl: 'http://localhost:8082/parkingCard/',
+            parkingRecordUrl: 'http://localhost:8082/parkingRecord/',
+            dialogBuildFormVisible: false,
+            dialogEditFormVisible: false,
+            pagination: {
+                currentPage: 1,
+                pageSize: 6,
+                total: 0,
+                licencePlate: '',
+            },
+            tableData: [],
+            buildForm: {
+                carId: '',
+                parkingId: '',
+                userId: 0,
+                username: '',
+                userPhone: '',
+                userSex: '',
+                licencePlate: '',
+                type: "",
+                carState: '未离开',
+            },
+            editForm: {carId: '', parkingId: '', userId: "", licencePlate: '', type: ""},
+            carBuildRules: {
+                /* carId: [
+                     {
+                         required: true,
+                         message: "序号不能为空",
+                         trigger: "blur",
+                     },
+                     {
+                         min: 1,
+                         max: 5,
+                         message: "长度在1到5个字符",
+                         trigger: 'blur'
+                     },
+                 ],*/
+                username: [
+                    {
+                        required: true,
+                        message: "车主姓名不能为空",
+                        trigger: "blur",
+                    },
+                    {
+                        min: 2,
+                        max: 10,
+                        message: "长度在2到10个字符",
+                        trigger: 'blur'
+                    },
+                ],
+                userSex: [
+                    {
+                        required: true,
+                        message: "车主姓别不能为空",
+                        trigger: "blur",
+                    },
+                    {
+                        min: 1,
+                        max: 1,
+                        message: "长度在1个字符",
+                        trigger: 'blur'
+                    },
+                ],
+                userPhone: [
+                    {
+                        required: true,
+                        message: "车主电话不能为空",
+                        trigger: "blur",
+                    },
+                    {
+                        min: 11,
+                        max: 11,
+                        message: "长度为11个字符",
+                        trigger: 'blur'
+                    },
+                ],
+                parkingId: [
+                    {
+                        required: true,
+                        message: "停车场编号不能为空",
+                        trigger: "blur",
+                    },
+                ],
+                userId: [
+                    {
+                        required: true,
+                        message: "车主编号不能为空",
+                        trigger: "blur",
+                    },
+                ],
+                licencePlate: [
+                    {
+                        required: true,
+                        message: "车牌不能为空",
+                        trigger: "blur",
+                    },
+                    {
+                        min: 1,
+                        max: 15,
+                        message: "车牌在1到15个字符",
+                        trigger: 'blur'
+                    },
+                ],
+                type: [
+                    {
+                        required: true,
+                        message: "车的类型不能为空",
+                        trigger: "blur",
+                    },
+                    {
+                        min: 1,
+                        max: 15,
+                        message: "长度在1到15个字符",
+                        trigger: 'blur'
+                    },
+                ],
+            },
+            carEditRules: {
+                parkingId: [
+                    {
+                        required: true,
+                        message: "停车场编号不能为空",
+                        trigger: "blur",
+                    },
+                ],
+                username: [
+                    {
+                        required: true,
+                        message: "车主姓名不能为空",
+                        trigger: "blur",
+                    },
+                    {
+                        min: 2,
+                        max: 10,
+                        message: "长度在2到10个字符",
+                        trigger: 'blur'
+                    },
+                ],
+                userSex: [
+                    {
+                        required: true,
+                        message: "车主姓名不能为空",
+                        trigger: "blur",
+                    },
+                    {
+                        min: 1,
+                        max: 1,
+                        message: "长度在1个字符",
+                        trigger: 'blur'
+                    },
+                ],
+                userPhone: [
+                    {
+                        required: true,
+                        message: "停车场名称不能为空",
+                        trigger: "blur",
+                    },
+                    {
+                        min: 11,
+                        max: 11,
+                        message: "长度为11个字符",
+                        trigger: 'blur'
+                    },
+                ],
+                licencePlate: [
+                    {
+                        required: true,
+                        message: "车牌不能为空",
+                        trigger: "blur",
+                    },
+                    {
+                        min: 1,
+                        max: 15,
+                        message: "车牌在1到15个字符",
+                        trigger: 'blur'
+                    },
+                ],
+                type: [
+                    {
+                        required: true,
+                        message: "车的类型不能为空",
+                        trigger: "blur",
+                    },
+                    {
+                        min: 1,
+                        max: 15,
+                        message: "长度在1到15个字符",
+                        trigger: 'blur'
+                    },
+                ],
+            },
+            parkingRecordId: 0,
+        },
+        created() {
+            this.getCarInformation();
+        },
+        methods: {
+            //修改停车状态
+            handleModify(row){
+              axios.put(this.carUrl+"reviseCarState?carId="+row.carId+"&state="+row.carState).then((res)=>{
+                  if (row.carState=="未离开"){
+                      //alert(row.carId);
+                      axios.put(this.parkingRecordUrl+"reviseAwayTime?parkingRecordId="+row.carId).then((res)=>{
+
+                      })
+                  }
+              }).finally(()=>{
+                  this.getCarInformation();
+              })
+            },
+            //删除车辆信息
+            handleDelete(row) {
+                console.log(row);
+                axios.delete(this.carUrl + "cancelCarInformation", {
+                    params: {
+                        "carId": row.carId
+                    }
+                }).then((res) => {
+                    if (res.data.flag) {//减少停车场车的数量
+                        axios.put(this.parkingUrl + "reviseReduceParkingCarCountById?parkingId=" + row.parkingId).then((res) => {
+                            if (res.data.flag) {
+                                this.$message.success(res.data.message);
+                            } else {
+                                this.$message.error(res.data.data);
+                            }
+                        });
+                        //删除停车记录
+
+                        this.$message.success(res.data.message);
+                    } else {
+                        this.$message.error(res.data.message)
+                    }
+
+                }).finally(() => {
+                    this.getCarInformation();
+                })
+            },
+            //编辑
+            handleEdit(row) {
+                console.log(row);
+                this.dialogEditFormVisible = true;
+                this.editForm = row;
+            },
+            //编辑发送请求
+            reviseCarInformation() {
+                axios.put(this.carUrl + "reviseCarInformation", this.editForm).then((res) => {
+                    if (res.data.flag) {
+                        this.$message.success(res.data.message);
+                    } else {
+                        this.$message.error(res.data.message);
+                    }
+                }).finally((res) => {
+                    this.dialogEditFormVisible = false;
+                    this.getCarInformation();
+                })
+            },
+            //查询车辆信息
+            getCarInformation() {
+                axios.get(this.carUrl + "getCarInformation", {
+                    params: {
+                        "currentPage": this.pagination.currentPage,
+                        "licencePlate": this.pagination.licencePlate,
+                        "pageSize": this.pagination.pageSize
+                    }
+                }).then((res) => {
+                    if (res.data.flag) {
+                        this.tableData = res.data.data;
+                        this.pagination.total = res.data.data[0].total;
+                    } else {
+                        this.tableData = null;
+                    }
+                }).finally(() => {
+                    this.pagination.licencePlate = '';
+                })
+            },
+            //改变页码
+            handleCurrentChange(currentPage) {
+                axios.get(this.carUrl + "getCarInformation", {
+                    params: {
+                        "currentPage": currentPage,
+                        "licencePlate": "",
+                        "pageSize": this.pagination.pageSize
+                    }
+                }).then((res) => {
+                    if (res.data.flag) {
+                        this.tableData = res.data.data;
+                        this.pagination.total = res.data.data[0].total;
+                    } else {
+                        this.tableData = null;
+                    }
+                }).finally(() => {
+                    this.pagination.licencePlate = '';
+                })
+            },
+            //导出数据
+            exportCar() {
+                this.$confirm("您确定导出到本地吗?", "提示", {
+                    confirmButtonText: "确定",
+                    cancelButtonText: "取消",
+                    type: "warning"
+                }).then(() => {
+                    location.href = this.carUrl + "exportCar";
+                })
+            },
+            //添加车辆信息
+            saveCarInformation() {
+                if (this.buildForm.username.length > 0 &&
+                    this.buildForm.userPhone.length > 0 &&
+                    this.buildForm.userSex.length > 0 &&
+                    this.buildForm.parkingId.length > 0 &&
+                    this.buildForm.licencePlate.length > 0 &&
+                    this.buildForm.type.length > 0) {
+
+                    //构建用户信息
+                    let data2 = {
+                        username: this.buildForm.username,
+                        userPhone: this.buildForm.userPhone,
+                        userSex: this.buildForm.userSex,
+                    };
+                    //添加用户
+                    axios.post(this.userUrl + "addUserInformation", data2).then((res) => {
+                        if (res.data.flag) {
+                            this.buildForm.userId = res.data.data;
+                            //构建停车信息
+                            let data = {
+                                userId: this.buildForm.userId,
+                                parkingId: parseInt(this.buildForm.parkingId),
+                                licencePlate: this.buildForm.licencePlate,
+                                type: this.buildForm.type,
+                                carState: this.buildForm.carState
+                            };
+                            //添加停车
+                            axios.post(this.carUrl + "saveCarInformation", data).then((res) => {
+                                if (res.data.flag) {
+                                    this.$message.success(res.data.message);
+                                    var carId = res.data.data;
+                                    //修改停车场数量 添加
+                                    var parkingId = parseInt(this.buildForm.parkingId);
+                                    axios.put(this.parkingUrl + "reviseAddParkingCarCountById?parkingId=" + parkingId).then((res) => {
+                                        if (res.data.flag) {
+                                            //成功后添加停车记录
+                                            //查询卡号
+                                            axios.get(this.parkingCardUrl + "getCardNumber", {
+                                                params: {
+                                                    "cardOwner": this.buildForm.username
+                                                }
+                                            }).then((res) => {
+                                                if (res.data.flag) {
+                                                    //查询成功
+                                                    var parkingCardId = res.data.data;
+                                                    //构建停车记录信息
+                                                    let data3 = {
+                                                        carId: parseInt(carId),
+                                                        driveAwayTime: new Date(),
+                                                        parkingCardId: parseInt(parkingCardId),
+                                                        parkingId: parseInt(this.buildForm.parkingId),
+                                                        stopTime: new Date()
+                                                    };
+                                                    axios.post(this.parkingRecordUrl + "saveParkingRecord", data3).then((res) => {
+                                                        if (res.data.flag) {
+                                                            //添加停车记录成功
+                                                            this.parkingCardId = res.data.data;
+                                                        }
+                                                    })
+                                                } else {
+                                                    cardNumber = "";
+                                                }
+                                            })
+                                            this.$message.success(res.data.message);
+                                        } else {
+                                            this.$message.error(res.data.message);
+                                        }
+                                    })
+                                } else {
+                                    this.$message.error(res.data.message);
+                                }
+                            }).finally(() => {
+                                this.dialogBuildFormVisible = false;
+                                this.getCarInformation();
+                            });
+                        } else {
+                            this.buildForm.userId = null;
+                        }
+                    })
+                } else {
+                    this.$message.error("请填写符合规则的信息");
+                }
+            },
+            //自动补全
+            querySearch(queryString, cb) {
+                axios.get(this.carUrl + "getCarCompletion", {
+                    params: {
+                        "prefix": queryString
+                    }
+                }).then((res) => {
+                    let data = [];
+                    var value = "{ value:";
+                    for (var i = 0; i < res.data.data.length; i++) {
+                        data.push({'value': res.data.data[i]});
+                    }
+                    console.log(data);
+                    var results = data;
+                    // // 调用 callback 返回建议列表的数据
+                    cb(results);
+                })
+            },
+        },
+    })
+</script>
+
+</body>
+</html>

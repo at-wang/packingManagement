@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 页面meta -->
+
+    <meta charset="utf-8">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>@@@停车场管理系统</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" type="text/css" href="css/elementui.css">
+    <link rel="stylesheet" type="text/css" href="elementui/index.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">-->
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/layui.css">-->
+    <link rel="stylesheet" type="text/css" href="elementui/index2.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">-->
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/vue.js"></script>
+    <script type="text/javascript" src="elementui/index.js"></script>
+    <script type="text/javascript" src="js/elementui.js"></script>
+    <script type="text/javascript" src="js/axios-0.18.0.js"></script>
+    <script type="text/javascript" src="js/cookie_utils.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/date.js"></script>
+    <script type="text/javascript" src="js/nowTime.js"></script>
+    <script type="text/javascript" src="js/echarts.js"></script>
+    <style>
+        .avatar-uploader .el-upload {
+            border: 1px dashed #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-uploader .el-upload:hover {
+            border-color: #409EFF;
+        }
+
+        .avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 178px;
+            height: 178px;
+            line-height: 178px;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 178px;
+            height: 178px;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+<div id="app">
+
+    <div style="margin-top: 50px;border: 1px solid #bebebe;width: 500px;height: 400px;margin-left: 300px;background-color: #f0f0f0">
+        <el-header>
+            <el-form :model="formData">
+                <el-form-item label="管理员头像:">
+                    <el-upload
+                            style="margin-top: 20px"
+                            class="avatar-uploader"
+                            action="https://jsonplaceholder.typicode.com/posts/"
+                            :show-file-list="false"
+                            :on-success="handleAvatarSuccess"
+                            :before-upload="beforeAvatarUpload">
+                        <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                        <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                    </el-upload>
+                </el-form-item>
+                <el-form-item label="管理员名称:">
+                    <el-input v-model="username" style="width: 150px;"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button @click="dialogModifyFormVisible=true;ModifyForm={}"
+                               style="width: 100px;margin-left: 100px;margin-top: 20px">修改密码
+                    </el-button>
+                </el-form-item>
+            </el-form>
+        </el-header>
+    </div>
+    <!--修改密码-->
+    <div>
+        <el-dialog :visible.sync="dialogModifyFormVisible">
+            <div slot="title" style="height: 10px">
+                <h3 style="color: #0c726b">修改密码</h3>
+            </div>
+            <el-form :model="ModifyForm" :rules="ModifyRules">
+                <el-form-item prop="password" label="输入修改密码">
+                    <el-input v-model="ModifyForm.password" style="width: 300px;margin-left: 20px"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="info" style="background-color: #f0f0f0;color: #2F4056"
+                           @click="dialogModifyFormVisible = false">取 消
+                </el-button>
+                <el-button type="info" style="background-color: #0c726b" @click="modifyPassword">确
+                    定
+                </el-button>
+            </div>
+        </el-dialog>
+    </div>
+</div>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            dialogModifyFormVisible: false,
+            imageUrl: '',
+            formData: {},
+            adminUrl: 'http://localhost:8082/admin/',
+            username: '',
+            id: '',
+            ModifyForm: [{password: ''}],
+            ModifyRules: {
+                password: [{
+                    required: true,
+                    message: "修改密码不能为空",
+                    trigger: "blur"
+                },
+                    {
+                        min: 5,
+                        max: 10,
+                        message: "长度在5到11个字符",
+                        trigger: 'blur'
+                    }
+                ],
+            },
+        },
+        created() {
+            this.getAdmin();
+        },
+        methods: {
+            getAdmin() {
+                this.imageUrl = getCookieValue("image");
+                this.username = getCookieValue("name");
+                this.id = getCookieValue("id");
+            },
+            handleAvatarSuccess(res, file) {
+                this.imageUrl = URL.createObjectURL(file.raw);
+            },
+            beforeAvatarUpload(file) {
+                const isJPG = file.type === 'image/jpeg';
+                const isLt2M = file.size / 1024 / 1024 < 2;
+
+                if (!isJPG) {
+                    this.$message.error('上传头像图片只能是 JPG 格式!');
+                }
+                if (!isLt2M) {
+                    this.$message.error('上传头像图片大小不能超过 2MB!');
+                }
+                return isJPG && isLt2M;
+            },
+            modifyPassword() {
+                axios.put(this.adminUrl + "revisePassword?id="
+                    + this.id + "&password=" + this.ModifyForm.password).then((res) => {
+                    if (res.data.flag) {
+                        this.$message.success("修改成功后需要重新登录");
+                        setTimeout(parent.location.href='login.html',1000);
+                    } else {
+                        this.$message.error(res.data.data);
+                    }
+                }).finally(() => {
+                    this.dialogModifyFormVisible = false;
+                })
+            }
+        },
+    })
+</script>
+
+</body>
+</html>

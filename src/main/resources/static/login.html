@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <head>
+        <!-- 页面meta -->
+
+        <meta charset="utf-8">
+
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+        <title>@@@停车场管理</title>
+        <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+        <!-- 引入样式 -->
+        <!--    <link rel="stylesheet" type="text/css" href="css/elementui.css">-->
+        <link rel="stylesheet" type="text/css" href="elementui/index.css">
+        <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+        <!-- 引入组件库 -->
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="js/vue.js"></script>
+        <script type="text/javascript" src="elementui/index.js"></script>
+        <!--    <script type="text/javascript" src="js/elementui.js"></script>-->
+        <script type="text/javascript" src="js/axios-0.18.0.js"></script>
+        <script type="text/javascript" src="js/cookie_utils.js"></script>
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    html {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+        background: url(img/bg.jpg) no-repeat 0px 0px;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        -moz-background-size: 100% 100%;
+    }
+
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+
+    #loginDiv {
+        width: 37%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 300px;
+        background-color: rgba(75, 81, 95, 0.3);
+        box-shadow: 7px 7px 17px rgba(52, 56, 66, 0.5);
+        border-radius: 5px;
+    }
+
+    #name_trip {
+        margin-left: 50px;
+        color: red;
+    }
+
+    p {
+        margin-top: 30px;
+        margin-left: 20px;
+        color: azure;
+    }
+
+
+</style>
+<body>
+<div id="loginDiv">
+    <el-container>
+        <el-form :model="formData" :rules="rules" id="form">
+            <h1 style="text-align: center;color: aliceblue">登录</h1>
+            <el-form-item prop="username">
+                <p>用户名:
+                    <el-input style="width: 230px;margin-left: 40px" v-model=formData.username type="text"
+                              placeholder="请输入用户名"></el-input>
+                    <label id="name_trip"></label>
+                </p>
+            </el-form-item>
+            <el-form-item prop="password">
+                <p>密码:
+                    <el-input style="width: 230px;margin-left: 43px" v-model=formData.password id="password"
+                              placeholder="请输入密码" type="password"></el-input>
+                    <label id="password_trip"></label>
+                </p>
+            </el-form-item>
+            <template>
+                <div style="text-align: center;margin-top: 30px;">
+                    <el-button style="background-color: #0c726b;width: 100px;height: 40px" type="info" @click="login()">登录</el-button>
+                    <el-button style="width: 100px;height: 40px;background-color: #f0f0f0" type="info" ><a  href="register.html">立即注册</a></el-button>
+                </div>
+
+            </template>
+
+        </el-form>
+    </el-container>
+</div>
+<script>
+    var vm = new Vue({
+        el: '#loginDiv',
+        loginHref: '',
+        data: {
+            adminUrl:"http://localhost:8082/admin/",
+            formData: {
+                username: '',
+                password: ''
+            },
+            rules: {
+                username: [{
+                    required: true,
+                    message: "用户名不能为空",
+                    trigger: "blur"
+                },
+                    {
+                        min: 3,
+                        max: 10,
+                        message: "长度在3到10个字符",
+                        trigger: 'blur'
+                    }
+                ],
+                password: [{
+                    required: true,
+                    message: "密码不能为空",
+                    trigger: "blur"
+                },
+                    {
+                        min: 3,
+                        max: 10,
+                        message: "长度在3到10个字符",
+                        trigger: 'blur'
+                    }
+                ]
+            },
+
+        },
+        created() {
+
+        },
+        methods: {
+            //登录方法
+            login() {
+                //发送ajax请求
+                axios.get(this.adminUrl+"login",{
+                    params:{
+                        "username":this.formData.username,
+                        "password":this.formData.password
+                    }
+                }).then((res)=>{
+                    if (res.data.flag){
+                        window.location.href='index.html';
+                        console.log(res.data.data)
+                        setCookieValue("image",res.data.data.image);
+                        setCookieValue("name",res.data.data.username);
+                        setCookieValue("id",res.data.data.id)
+                        setCookieValue("token",res.data.message);
+                    }else {
+                        this.$message.error(res.data.message);
+                    }
+                })
+            },
+        }
+    })
+</script>
+</body>
+
+</html>

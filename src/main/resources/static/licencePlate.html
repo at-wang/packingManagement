@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 页面meta -->
+
+    <meta charset="utf-8">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>@@@停车场管理系统</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" type="text/css" href="css/elementui.css">
+    <link rel="stylesheet" type="text/css" href="elementui/index.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">-->
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--    <link rel="stylesheet" type="text/css" href="css/layui.css">-->
+    <link rel="stylesheet" type="text/css" href="elementui/index2.css">
+<!--    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">-->
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/vue.js"></script>
+    <script type="text/javascript" src="elementui/index.js"></script>
+    <script type="text/javascript" src="js/elementui.js"></script>
+    <script type="text/javascript" src="js/axios-0.18.0.js"></script>
+    <script type="text/javascript" src="js/cookie_utils.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/date.js"></script>
+    <script type="text/javascript" src="js/nowTime.js"></script>
+    <script type="text/javascript" src="js/echarts.js"></script>
+</head>
+<body>
+<div id="app">
+    <el-container>
+        <el-aside style="width: 500px">
+            <div style="margin-left: 160px;margin-top: 200px">
+                <font size="5">车牌号为{{licencePlate}}</font>
+            </div>
+            <div style="margin-left: 220px;margin-top: 30px">
+                <el-button @click="nowLook" type="info" style="background-color: #0c726b">去查看</el-button>
+            </div>
+        </el-aside>
+        <el-container>
+            <el-header>
+                <el-image :src="imageUrl"
+                          style="width: 400px;margin-top: 100px;margin-left: 40px"></el-image>
+            </el-header>
+            <div style="border: 1px solid #f0f0f0;width: 500px">
+                <el-upload
+                        class="upload-demo"
+                        drag
+                        action="/licensePlate/recognition"
+                        multiple
+                        :on-success="uploadSuccess"
+                        :before-upload="beforeImageUpload"
+                        style="margin-top: 300px;margin-left: 60px"
+                >
+                    <i class="el-icon-upload"></i>
+                    <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                    <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过2000kb</div>
+                </el-upload>
+            </div>
+        </el-container>
+    </el-container>
+
+</div>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            licencePlate: '',
+            imageUrl: 'https://baidu-ai.bj.bcebos.com/ocr/license_plate.jpeg',
+            carUrl: 'http://localhost:8082/car/',
+        },
+        created() {
+        },
+        methods: {
+            uploadSuccess(response) {
+                console.log(response.data);
+                this.imageUrl = response.data.imageUrl;
+                this.licencePlate = response.data.licencePlate;
+            },
+            beforeImageUpload(file) {
+                const isJPG = file.type === 'image/jpeg';
+                const isLt2M = file.size / 1024 / 1024 < 2;
+                if (!isJPG) {
+                    this.$message.error('上传套餐图片只能是 JPG 格式!');
+                }
+                if (!isLt2M) {
+                    this.$message.error('上传套餐图片大小不能超过 2MB!');
+                }
+                return isJPG && isLt2M;
+            },
+            nowLook() {
+                if (this.licencePlate.length > 0 && this.licencePlate.length < 8) {
+                    axios.get(this.carUrl+"getCarInformation",{
+                        params:{
+                            "licencePlate":this.licencePlate,
+                            "pageSize":1,
+                            "currentPage":1,
+                        }
+                    }).then((res)=>{
+                        if (res.data.flag){
+                            window.location.href='car.html';
+                        }else {
+                            this.$message.error("暂无当前车牌号信息");
+                        }
+                    })
+                }else {
+                    this.$message.error("当前车牌号格式不正确")
+                }
+            }
+        },
+    })
+
+</script>
+</body>
+</html>
